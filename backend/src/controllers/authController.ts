@@ -1,156 +1,168 @@
 import { Request, Response } from 'express';
-import { supabase } from '../config/db';
-import { createClient } from '@supabase/supabase-js';
+import { supabase, supabaseAdmin } from '../config/db';
 
+// ─── Helper: resolve username → email via auth.users metadata ───────────────
+async function resolveEmail(usernameOrEmail: string): Promise<string | null> {
+  if (usernameOrEmail.includes('@')) return usernameOrEmail;
+
+  // 1. Try public.users table (if schema has been migrated)
+  try {
+    const { data: row } = await supabase
+      .from('users')
+      .select('email')
+      .eq('username', usernameOrEmail)
+      .maybeSingle();
+    if (row?.email) return row.email;
+  } catch (_) {
+    // column may not exist yet — fall through
+  }
+
+  // 2. Fall back: scan auth.users metadata for matching username
+  const { data: authList } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  if (!authList?.users) return null;
+
+  const match = authList.users.find(
+    (u) => u.user_metadata?.username?.toLowerCase() === usernameOrEmail.toLowerCase()
+  );
+  return match?.email ?? null;
+}
+
+// ─── Helper: build user profile ──────────────────────────────────────────────
+async function buildProfile(userId: string, fallback: Record<string, any>) {
+  let { data: pub } = await supabaseAdmin.from('users').select('*').eq('id', userId).maybeSingle();
+
+  if (!pub) {
+    const uname = fallback.username || fallback.email?.split('@')[0] || `user_${userId.substring(0, 6)}`;
+    const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const role = fallback.role || (uname === 'admin' ? 'admin' : 'user');
+
+    const { data: inserted } = await supabaseAdmin
+      .from('users')
+      .upsert({
+        id: userId,
+        username: uname,
+        role: role,
+        balance: role === 'admin' ? 100000 : 0,
+        vip_level: role === 'admin' ? 3 : 1,
+        invite_code: inviteCode,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'id' })
+      .select('*')
+      .maybeSingle();
+
+    if (inserted) {
+      pub = inserted;
+    }
+  }
+
+  return {
+    _id: userId,
+    username:               pub?.username               ?? fallback.username ?? fallback.email,
+    email:                  pub?.email                  ?? fallback.email,
+    role:                   pub?.role                   ?? fallback.role ?? 'user',
+    balance:                pub?.balance                ?? 0,
+    vipLevel:               pub?.vip_level              ?? 1,
+    completedTasksToday:    pub?.completed_tasks_today  ?? 0,
+    totalCommission:        pub?.total_commission        ?? 0,
+    inviteCode:             pub?.invite_code             ?? '',
+    avatar:                 pub?.avatar                  ?? null,
+  };
+}
+
+// ─── REGISTER ────────────────────────────────────────────────────────────────
 export const register = async (req: Request, res: Response) => {
   try {
     const { username, email, password, inviteCode } = req.body;
-
     if (!email || !username || !password) {
       return res.status(400).json({ success: false, message: 'Please provide all required fields' });
     }
 
-    // Validate invite code if provided
-    let referredBy = null;
+    // Validate invite code
     if (inviteCode) {
-      const { data: referrer, error: referrerError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('invite_code', inviteCode)
-        .single();
-        
-      if (referrer) {
-        referredBy = referrer.id;
-      } else {
+      const { data: referrer } = await supabase
+        .from('users').select('id').eq('invite_code', inviteCode).single();
+      if (!referrer) {
         return res.status(400).json({ success: false, message: 'Invalid invite code' });
       }
     }
 
-    // Register user in Supabase Auth
+    // Create user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { username }
+      user_metadata: { username },
     });
 
     if (authError) {
-      if (authError.message.includes('already registered')) {
-        return res.status(400).json({ success: false, message: 'User already exists' });
-      }
-      throw authError;
+      const msg = authError.message.includes('already registered')
+        ? 'User already exists'
+        : authError.message;
+      return res.status(400).json({ success: false, message: msg });
     }
 
     const userId = authData.user.id;
 
-    // If referredBy is set, update the user in public.users
-    // Note: The public.users row is created via a database trigger automatically,
-    // so we just need to update it here.
-    if (referredBy) {
-      await supabase.from('users').update({ referred_by: referredBy }).eq('id', userId);
-    }
-
-    // Now sign them in to get a token
-    const supabaseAnon = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
-    );
-
-    const { data: loginData, error: loginError } = await supabaseAnon.auth.signInWithPassword({
-      email,
-      password,
+    // Sign in to get session token
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+      email, password,
     });
-
     if (loginError) throw loginError;
 
-    // Fetch the public user data
-    const { data: publicUser } = await supabase.from('users').select('*').eq('id', userId).single();
+    const profile = await buildProfile(userId, { username, email, role: 'user' });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      data: {
-        _id: userId,
-        username: publicUser?.username || username,
-        email: publicUser?.email || email,
-        role: publicUser?.role || 'user',
-        balance: publicUser?.balance ?? 0,
-        vipLevel: publicUser?.vip_level ?? 1,
-        completedTasksToday: publicUser?.completed_tasks_today ?? 0,
-        totalCommission: publicUser?.total_commission ?? 0,
-        inviteCode: publicUser?.invite_code ?? '',
-        avatar: publicUser?.avatar ?? null,
-        token: loginData.session?.access_token,
-      },
+      data: { ...profile, token: loginData.session?.access_token },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: (error as Error).message });
+    return res.status(500).json({ success: false, message: (error as Error).message });
   }
 };
 
+// ─── LOGIN ───────────────────────────────────────────────────────────────────
 export const login = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
-    
-    // Find the user's email from our public.users table if they provided a username
-    let email = username; 
-    if (!username.includes('@')) {
-      const { data: userRecord } = await supabase
-        .from('users')
-        .select('email')
-        .eq('username', username)
-        .maybeSingle();
-      
-      if (userRecord && userRecord.email) {
-        email = userRecord.email;
-      } else {
-        // No user found with that username
-        return res.status(401).json({ success: false, message: 'Invalid username or password' });
-      }
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide credentials' });
     }
 
-    // Create a fresh client for this request to avoid session bleeding
-    const supabaseAnon = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
-    );
+    // Resolve username → email
+    const email = await resolveEmail(username);
+    if (!email) {
+      return res.status(401).json({ success: false, message: 'Invalid username or password' });
+    }
 
-    const { data: loginData, error: loginError } = await supabaseAnon.auth.signInWithPassword({
+    // Sign in
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (loginError) {
+      console.error('[login] signIn error:', loginError.message);
       return res.status(401).json({ success: false, message: 'Invalid username or password' });
     }
 
-    const userId = loginData.user?.id;
+    const userId = loginData.user.id;
 
-    // Fetch the public user data
-    const { data: publicUser, error: userError } = await supabase.from('users').select('*').eq('id', userId).single();
+    // Get auth user metadata as fallback
+    const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+    const meta = authUser?.user?.user_metadata ?? {};
 
-    if (userError) {
-      return res.status(500).json({ success: false, message: 'Error fetching user profile' });
-    }
+    const profile = await buildProfile(userId, {
+      username: meta.username ?? email,
+      email,
+      role: meta.role ?? 'user',
+    });
 
-    res.json({
+    return res.json({
       success: true,
-      data: {
-        _id: userId,
-        username: publicUser.username,
-        email: publicUser.email,
-        role: publicUser.role,
-        balance: publicUser.balance ?? 0,
-        vipLevel: publicUser.vip_level ?? 1,
-        completedTasksToday: publicUser.completed_tasks_today ?? 0,
-        totalCommission: publicUser.total_commission ?? 0,
-        inviteCode: publicUser.invite_code ?? '',
-        avatar: publicUser.avatar ?? null,
-        token: loginData.session?.access_token,
-      },
+      data: { ...profile, token: loginData.session?.access_token },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: (error as Error).message });
+    return res.status(500).json({ success: false, message: (error as Error).message });
   }
 };

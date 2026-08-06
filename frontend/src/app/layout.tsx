@@ -1,19 +1,31 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import Header from "@/components/layout/Header";
 import SupportWidget from "@/components/chat/SupportWidget";
 import { Suspense } from "react";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+  themeColor: "#1A6BF0",
+};
+
 export const metadata: Metadata = {
   title: "Sterling Shopify Market | Global Hub",
-  description: "A luxury VIP e-commerce fintech platform.",
+  description: "A premium VIP e-commerce fintech platform.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-[#0D0D0D] text-[#F5F5F5] antialiased overflow-x-hidden">
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      </head>
+      <body className="bg-[#F8FAFC] text-slate-800 antialiased overflow-x-hidden">
         <Header />
         {children}
         <Suspense fallback={null}>
@@ -23,20 +35,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           position="top-center"
           toastOptions={{
             style: {
-              background: "#1A1A1A",
-              color: "#F5F5F5",
-              border: "1px solid rgba(212,175,55,0.3)",
+              background: "#FFFFFF",
+              color: "#1E293B",
+              border: "1px solid rgba(59,130,246,0.25)",
               borderRadius: "12px",
               fontWeight: 700,
-              fontSize: "12px",
-              letterSpacing: "0.05em",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.8), 0 0 20px rgba(212,175,55,0.1)",
+              fontSize: "13px",
+              letterSpacing: "0.02em",
+              boxShadow: "0 8px 32px rgba(30,64,175,0.12)",
             },
             success: {
-              iconTheme: { primary: "#D4AF37", secondary: "#0D0D0D" },
+              iconTheme: { primary: "#1A6BF0", secondary: "#FFFFFF" },
             },
             error: {
-              iconTheme: { primary: "#E53E3E", secondary: "#F5F5F5" },
+              iconTheme: { primary: "#EF4444", secondary: "#FFFFFF" },
             },
           }}
         />

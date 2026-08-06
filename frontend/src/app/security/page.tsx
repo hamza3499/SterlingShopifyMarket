@@ -2,67 +2,96 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, FileText, X, Shield } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, FileText, Shield, ShieldCheck, CheckCircle2, Lock } from "lucide-react";
 
 export default function SecurityProfile() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen luxury-bg pb-12 font-sans relative overflow-hidden">
-      <div className="luxury-bg-orb w-[500px] h-[500px] -top-60 -left-40 opacity-15" />
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-50" />
+    <div className="min-h-screen luxury-bg pb-28 font-sans relative overflow-hidden">
+      {/* Ambient Glow Orbs */}
+      <div className="luxury-bg-orb w-[500px] h-[500px] -top-40 -left-32 bg-blue-300/30" />
+      <div className="luxury-bg-orb w-[400px] h-[400px] top-1/3 -right-32 bg-sky-200/40" style={{ animationDelay: "3s" }} />
+
+      {/* Top Divider */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/40 to-transparent" />
 
       {/* Header */}
-      <header className="px-6 pt-12 pb-6 flex items-center justify-between relative z-10">
-        <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all"
-          style={{ background: "#1A1A1A", border: "1px solid rgba(245,245,245,0.08)" }}>
-          <ArrowLeft size={20} className="text-[rgba(245,245,245,0.6)]" />
+      <header className="px-6 pt-8 pb-5 flex items-center justify-between relative z-10">
+        <button 
+          onClick={() => router.back()} 
+          className="h-11 w-11 rounded-2xl bg-white border border-slate-200/90 flex items-center justify-center shadow-sm text-slate-700 hover:text-blue-600 hover:border-blue-200 transition-all"
+        >
+          <ArrowLeft size={20} strokeWidth={2.25} />
         </button>
-        <h1 className="text-sm font-black uppercase tracking-[0.3em] text-[#F5F5F5]">Trust & Security</h1>
-        <div className="h-10 w-10" />
-      </header>
 
-      <main className="px-6 space-y-8 relative z-10">
-        
-        {/* Logos Section */}
-        <div className="text-center mt-4">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[rgba(245,245,245,0.4)] mb-6">Certified & Trusted By</p>
-          <div className="flex items-center justify-center gap-8 mb-6">
-            <span className="text-[#F5F5F5] font-black text-xl italic tracking-tighter opacity-80">Visa</span>
-            
-            {/* Mastercard Mock Logo */}
-            <div className="flex -space-x-4 opacity-80">
-              <div className="w-10 h-10 rounded-full bg-[#EB001B] mix-blend-screen"></div>
-              <div className="w-10 h-10 rounded-full bg-[#F79E1B] mix-blend-screen"></div>
-            </div>
-
-            <span className="text-[#F5F5F5] font-black text-xl italic tracking-tighter opacity-80">PayPal</span>
-          </div>
-          <p className="text-[8px] font-bold italic text-[rgba(245,245,245,0.3)]">* All logos are trademarks of their respective owners.</p>
+        <div className="text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Verified Protection</p>
+          <h1 className="text-xl font-black text-[#0F172A] tracking-tight">Trust & Security</h1>
         </div>
 
-        {/* Certificate Card */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="luxury-glass rounded-[32px] p-8 text-center flex flex-col items-center mt-8"
-          style={{ background: "#1A1A1A", border: "1px solid rgba(212,175,55,0.2)", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
-          
-          <div className="h-20 w-20 rounded-full flex items-center justify-center mb-6"
-            style={{ background: "rgba(212,175,55,0.05)", border: "2px solid rgba(212,175,55,0.2)" }}>
-            <FileText size={32} className="text-[#D4AF37]" />
-          </div>
-          
-          <h2 className="text-sm font-black uppercase tracking-[0.2em] text-[#F5F5F5] mb-3">Compliance Certificates</h2>
-          
-          <p className="text-[10px] text-[rgba(245,245,245,0.5)] font-medium leading-relaxed max-w-[250px] mx-auto mb-8">
-            Click below to view our official business registration and security compliance certificates.
+        <div className="w-11" />
+      </header>
+
+      <main className="px-5 space-y-6 relative z-10 mt-4">
+        {/* Trusted Partners Banner Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="luxury-card-white rounded-[32px] p-7 text-center border border-slate-200/90 shadow-lg"
+        >
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-700 mb-5">
+            Certified & Trusted By
           </p>
 
-          <button onClick={() => router.push('/certificate')} className="btn-gold w-full py-4 rounded-2xl flex items-center justify-center gap-2 text-xs">
-            VIEW OFFICIAL CERTIFICATES
-          </button>
+          <div className="flex items-center justify-center gap-7 py-3">
+            <span className="text-[#0F172A] font-black text-2xl italic tracking-tighter">
+              VISA
+            </span>
+
+            <div className="flex -space-x-3.5 items-center">
+              <div className="w-9 h-9 rounded-full bg-[#EB001B] shadow-md" />
+              <div className="w-9 h-9 rounded-full bg-[#F79E1B] shadow-md" />
+            </div>
+
+            <span className="text-blue-700 font-black text-2xl italic tracking-tighter">
+              PayPal
+            </span>
+          </div>
+
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-4">
+            * 256-Bit SSL Encrypted Financial Protocol
+          </p>
         </motion.div>
 
+        {/* Compliance Certificate Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.15 }}
+          className="luxury-card-soft-blue rounded-[32px] p-8 text-center flex flex-col items-center shadow-xl border border-blue-200/80"
+        >
+          <div className="h-20 w-20 rounded-[24px] bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center mb-5 shadow-xl border-2 border-white/40">
+            <FileText size={36} strokeWidth={2} />
+          </div>
+          
+          <h2 className="text-base font-black uppercase tracking-[0.2em] text-[#0F172A] mb-2">
+            Compliance Certificates
+          </h2>
+          
+          <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-[260px] mx-auto mb-7">
+            View official business registration, security compliance, and licensing certificates.
+          </p>
+
+          <button 
+            onClick={() => router.push('/certificate')} 
+            className="btn-blue w-full py-4.5 rounded-2xl flex items-center justify-center gap-2.5 text-xs font-black uppercase tracking-[0.15em] text-white shadow-[0_12px_32px_rgba(37,99,235,0.4)] transition-all hover:scale-[1.01]"
+          >
+            <ShieldCheck size={18} strokeWidth={2.25} />
+            <span>View Official Certificates</span>
+          </button>
+        </motion.div>
       </main>
     </div>
   );

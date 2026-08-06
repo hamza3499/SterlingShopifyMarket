@@ -1,8 +1,11 @@
 import express from 'express';
-import { getProfile, generateTask, completeTask, submitDeposit, getTransactions, submitWithdrawal, updateAvatar, updateWithdrawalAddress, getTaskSettings, getTasks, selectRoom, requestLevelUnlock } from '../controllers/userController';
+import { getProfile, generateTask, completeTask, submitDeposit, getTransactions, submitWithdrawal, updateAvatar, updateWithdrawalAddress, getTaskSettings, getTasks, selectRoom, requestLevelUnlock, getDepositAddress } from '../controllers/userController';
 import { protect } from '../middleware/auth';
 
 const router = express.Router();
+
+// Publicly readable deposit address
+router.get('/deposit-address', getDepositAddress);
 
 router.use(protect);
 

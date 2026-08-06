@@ -15,6 +15,12 @@ interface User {
   dailyProfit?: number;
   dailyTasks?: number;
   withdrawalAddress?: string;
+  todayEarning?: number;
+  yesterdayEarning?: number;
+  approvedVipLevel?: number;
+  vipLevelRequest?: number;
+  vipLevelRequestStatus?: string;
+  lastTaskReset?: string | null;
 }
 
 interface AuthState {

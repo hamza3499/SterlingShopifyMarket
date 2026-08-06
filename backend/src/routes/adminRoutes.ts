@@ -20,7 +20,9 @@ import {
     sendAdminMessage,
     resolveThread,
     getLevelRequests,
-    approveLevelUnlock
+    approveLevelUnlock,
+    updateDepositAddress,
+    getDepositAddressAdmin
 } from '../controllers/adminController';
 import { 
     createVA, 
@@ -66,6 +68,9 @@ router.put('/level-requests/:userId', protect, adminOrVA('can_approve_requests')
 // Task Settings
 router.get('/task-settings', protect, adminOrVA('can_edit'), getTaskSettings);
 router.put('/task-settings/:id', protect, adminOrVA('can_edit'), updateTaskSettings);
+
+router.get('/deposit-address', protect, adminOrVA(), getDepositAddressAdmin);
+router.put('/deposit-address', protect, adminOrVA('can_edit'), updateDepositAddress);
 
 // Product Library
 router.get('/products', protect, adminOrVA(), getProducts);

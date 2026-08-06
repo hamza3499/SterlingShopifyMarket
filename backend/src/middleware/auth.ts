@@ -66,17 +66,35 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       }
 
       // Fetch user profile from public.users
-      const { data: userProfile, error: profileError } = await supabase
+      const { data: userProfile } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
         
-      if (profileError || !userProfile) {
-        throw new Error('User profile not found');
+      let finalProfile = userProfile;
+      if (!finalProfile) {
+        const meta = user.user_metadata || {};
+        const isAdmin = user.email?.toLowerCase().includes('admin') || meta.username?.toLowerCase().includes('admin');
+        finalProfile = {
+          id: user.id,
+          username: meta.username || user.email?.split('@')[0] || 'User',
+          email: user.email,
+          role: meta.role || (isAdmin ? 'admin' : 'user'),
+          balance: 0,
+          vip_level: 1,
+          completed_tasks_today: 0,
+          total_deposited: 0,
+          total_withdrawn: 0,
+          total_commission: 0,
+          invite_code: meta.username?.toUpperCase() || 'STERLING',
+          avatar: null,
+          withdrawal_address: null,
+          pending_task: null
+        };
       }
 
-      req.user = { ...userProfile, _id: userProfile.id };
+      req.user = { ...finalProfile, _id: finalProfile.id };
       next();
     } catch (error: any) {
       console.error("Protection Middleware Failed:", error.message);

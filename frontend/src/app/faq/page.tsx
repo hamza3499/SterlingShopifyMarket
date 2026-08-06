@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ArrowLeft, ChevronDown, HelpCircle, Sparkles } from "lucide-react";
 
 export default function FAQPage() {
   const router = useRouter();
@@ -11,58 +11,87 @@ export default function FAQPage() {
 
   const faqs = [
     {
-      question: "How to recharge?",
-      answer: "Go to the Home page and click on the \"Recharge\" button. Select your preferred payment method and follow the instructions."
+      question: "How to recharge account balance?",
+      answer: "Navigate to the Vault & Wallet section, select 'Deposit', scan the official TRC20 QR code or copy the address. Input the deposited amount, attach your payment screenshot proof, and click 'Submit Deposit'."
     },
     {
-      question: "How to withdraw?",
-      answer: "Navigate to the Profile page, click on \"Deposit/Withdrawal\" or \"Withdrawal\", then follow the instructions. Enter the amount and your withdrawal password."
+      question: "How to request a withdrawal?",
+      answer: "Go to Vault & Wallet, select 'Withdraw', enter your desired withdrawal amount and paste your USDT-TRC20 address. Submissions are verified and processed automatically."
     },
     {
-      question: "What is order grabbing?",
-      answer: "Order grabbing is a task where you help merchants increase their sales volume. You receive a commission for each order you grab."
+      question: "What is order grabbing & optimization?",
+      answer: "Order grabbing is a strategic merchant task optimization system. By submitting orders on behalf of luxury merchants, you boost their store sales rating and earn an instant percentage commission."
     },
     {
-      question: "How to upgrade VIP level?",
-      answer: "VIP levels are upgraded based on your total balance or total task volume. Check the VIP section in the Menu for specific requirements."
+      question: "How to upgrade your VIP tier level?",
+      answer: "VIP levels auto-upgrade based on your total account balance and overall completed task volume. Higher VIP tiers unlock larger commission yields and priority task allocation."
     }
   ];
 
   return (
-    <div className="min-h-screen luxury-bg pb-12 font-sans relative overflow-hidden">
-      <div className="luxury-bg-orb w-[500px] h-[500px] -top-60 -left-40 opacity-15" />
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-50" />
+    <div className="min-h-screen luxury-bg pb-28 font-sans relative overflow-hidden">
+      {/* Ambient Glow Orbs */}
+      <div className="luxury-bg-orb w-[500px] h-[500px] -top-40 -left-32 bg-blue-300/30" />
+      <div className="luxury-bg-orb w-[400px] h-[400px] top-1/3 -right-32 bg-sky-200/40" style={{ animationDelay: "3s" }} />
+
+      {/* Top Divider */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/40 to-transparent" />
 
       {/* Header */}
-      <header className="px-6 pt-12 pb-6 flex items-center justify-between relative z-10">
-        <button onClick={() => router.back()} className="h-10 w-10 rounded-2xl flex items-center justify-center transition-all"
-          style={{ background: "#1A1A1A", border: "1px solid rgba(245,245,245,0.08)" }}>
-          <ArrowLeft size={20} className="text-[rgba(245,245,245,0.6)]" />
+      <header className="px-6 pt-8 pb-5 flex items-center justify-between relative z-10">
+        <button 
+          onClick={() => router.back()} 
+          className="h-11 w-11 rounded-2xl bg-white border border-slate-200/90 flex items-center justify-center shadow-sm text-slate-700 hover:text-blue-600 hover:border-blue-200 transition-all"
+        >
+          <ArrowLeft size={20} strokeWidth={2.25} />
         </button>
-        <h1 className="text-sm font-black uppercase tracking-[0.3em] text-[#F5F5F5]">FAQs</h1>
-        <div className="h-10 w-10" />
+
+        <div className="text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Knowledge Base</p>
+          <h1 className="text-xl font-black text-[#0F172A] tracking-tight">Frequently Asked Questions</h1>
+        </div>
+
+        <div className="w-11" />
       </header>
 
-      <main className="px-6 space-y-4 relative z-10 mt-4">
-        
+      <main className="px-5 space-y-4 relative z-10 mt-4">
         {faqs.map((faq, index) => {
           const isOpen = openIndex === index;
           return (
-            <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
-              className="luxury-glass rounded-[24px] overflow-hidden"
-              style={{ background: "#1A1A1A", border: "1px solid rgba(212,175,55,0.15)" }}>
-              
+            <motion.div 
+              key={index} 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: index * 0.08 }}
+              className={`rounded-[26px] overflow-hidden transition-all border ${
+                isOpen 
+                  ? "luxury-card-soft-blue border-blue-300/90 shadow-md" 
+                  : "luxury-card-white border-slate-200/90 shadow-sm hover:border-blue-200"
+              }`}
+            >
               <button 
                 onClick={() => setOpenIndex(isOpen ? null : index)}
-                className="w-full p-5 flex items-center justify-between text-left"
+                className="w-full p-5 flex items-center justify-between text-left gap-4"
               >
-                <h3 className="text-[11px] font-black uppercase tracking-widest text-[#F5F5F5] pr-4 leading-relaxed">{faq.question}</h3>
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                    isOpen ? "bg-blue-600 text-white border-blue-500" : "bg-blue-50 text-blue-600 border-blue-200"
+                  }`}>
+                    <HelpCircle size={17} strokeWidth={2.25} />
+                  </div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#0F172A] leading-relaxed">
+                    {faq.question}
+                  </h3>
+                </div>
+
                 <motion.div 
                   animate={{ rotate: isOpen ? 180 : 0 }} 
-                  transition={{ duration: 0.3 }}
-                  className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center bg-white/5 border border-white/10"
+                  transition={{ duration: 0.25 }}
+                  className={`h-8 w-8 shrink-0 rounded-full flex items-center justify-center border ${
+                    isOpen ? "bg-white text-blue-600 border-blue-200" : "bg-slate-100 text-slate-400 border-slate-200"
+                  }`}
                 >
-                  <ChevronDown size={16} className={isOpen ? "text-[#D4AF37]" : "text-[rgba(245,245,245,0.5)]"} />
+                  <ChevronDown size={16} strokeWidth={2.5} />
                 </motion.div>
               </button>
 
@@ -72,22 +101,20 @@ export default function FAQPage() {
                     initial={{ height: 0, opacity: 0 }} 
                     animate={{ height: "auto", opacity: 1 }} 
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.25 }}
                   >
-                    <div className="px-5 pb-5 pt-1">
-                      <div className="w-full h-px bg-gradient-to-r from-[rgba(212,175,55,0.2)] to-transparent mb-4" />
-                      <p className="text-[10px] text-[rgba(245,245,245,0.6)] font-medium leading-relaxed">
+                    <div className="px-6 pb-6 pt-1">
+                      <div className="w-full h-px bg-gradient-to-r from-blue-300/50 to-transparent mb-4" />
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed">
                         {faq.answer}
                       </p>
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-
             </motion.div>
           );
         })}
-
       </main>
     </div>
   );

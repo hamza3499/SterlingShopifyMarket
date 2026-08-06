@@ -28,8 +28,8 @@ export default function SupportWidget() {
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Hide widget on profile page, admin pages, login, register, and splash screen
-  const isHidden = pathname === "/profile" || pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register" || pathname === "/";
+  // Hide widget only on admin pages, login, register, and splash screen
+  const isHidden = pathname.startsWith("/admin") || pathname === "/login" || pathname === "/register" || pathname === "/";
 
   useEffect(() => {
     if (!token || !user || isHidden) return;
@@ -51,17 +51,11 @@ export default function SupportWidget() {
         }
       });
     }
-
-    return () => {
-      // Don't disconnect on unmount, we want to keep listening for notifications
-      // socketRef.current?.disconnect();
-    };
   }, [token, user, isHidden, isOpen]);
 
   useEffect(() => {
     if (searchParams.get("chat") === "true") {
       setIsOpen(true);
-      // Optional: remove the query param so it doesn't re-open on refresh
       router.replace(pathname, { scroll: false });
     }
   }, [searchParams, pathname, router]);
@@ -91,7 +85,6 @@ export default function SupportWidget() {
     const msgText = newMessage.trim();
     setNewMessage("");
 
-    // Optimistic UI update
     const tempMsg: Message = {
       id: Date.now().toString(),
       message: msgText,
@@ -103,7 +96,6 @@ export default function SupportWidget() {
     try {
       const { data } = await api.post("/chat/message", { message: msgText });
       if (data.success) {
-        // Replace temp message with real message
         setMessages(prev => prev.map(m => m.id === tempMsg.id ? data.data : m));
       }
     } catch (err) {
@@ -116,18 +108,25 @@ export default function SupportWidget() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Premium Floating Support Chat Button (PROMINENT & HIGH Z-INDEX FLOATING ABOVE BOTTOM NAV) */}
       <AnimatePresence>
         {!isOpen && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.92 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-24 right-6 z-40 h-14 w-14 rounded-full flex items-center justify-center shadow-[0_8px_30px_rgba(212,175,55,0.4)] transition-transform hover:scale-110 active:scale-95"
-            style={{ background: "linear-gradient(135deg, #A08020, #D4AF37, #F0D060)" }}
+            className="fixed z-[99] h-16 w-16 rounded-full flex items-center justify-center shadow-[0_12px_36px_rgba(37,99,235,0.6)] border-2 border-white/60 cursor-pointer"
+            style={{ 
+              bottom: "96px",
+              right: "20px",
+              background: "linear-gradient(135deg, #0A1435 0%, #1D4ED8 50%, #38BDF8 100%)",
+            }}
           >
-            <MessageSquare size={24} className="text-[#0D0D0D]" />
+            <MessageSquare size={26} className="text-white drop-shadow-md" strokeWidth={2.25} />
+            <span className="absolute top-0 right-0 h-4.5 w-4.5 rounded-full bg-emerald-400 border-2 border-white animate-pulse shadow-sm" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -140,59 +139,67 @@ export default function SupportWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-24 right-6 z-50 w-[90vw] max-w-[360px] h-[500px] max-h-[70vh] rounded-[24px] flex flex-col overflow-hidden shadow-2xl"
-            style={{ background: "#1A1A1A", border: "1px solid rgba(212,175,55,0.3)" }}
+            className="fixed z-[100] w-[92vw] max-w-[370px] h-[530px] max-h-[78vh] rounded-[30px] flex flex-col overflow-hidden shadow-2xl bg-white border-2 border-blue-200/90"
+            style={{
+              bottom: "100px",
+              right: "16px",
+            }}
           >
             {/* Header */}
-            <div className="px-5 py-4 flex items-center justify-between border-b border-[rgba(212,175,55,0.1)] relative">
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
+            <div className="px-5 py-4 flex items-center justify-between border-b border-blue-100 bg-gradient-to-r from-blue-50/80 to-white relative">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full flex items-center justify-center bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-                  <ShieldCheck size={20} className="text-[#D4AF37]" />
+                <div className="h-11 w-11 rounded-2xl flex items-center justify-center bg-blue-600 text-white shadow-md">
+                  <ShieldCheck size={22} strokeWidth={2.25} />
                 </div>
                 <div>
-                  <h3 className="text-xs font-black uppercase tracking-widest text-[#F5F5F5]">Live Support</h3>
-                  <p className="text-[9px] font-bold text-[#38A169] uppercase tracking-widest flex items-center gap-1 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#38A169] animate-pulse" /> Online
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#0F172A]">Live Support</h3>
+                  <p className="text-[9.5px] font-extrabold text-emerald-600 uppercase tracking-wider flex items-center gap-1 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Online Agent
                   </p>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="h-8 w-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition-colors">
-                <X size={16} />
+              <button 
+                onClick={() => setIsOpen(false)} 
+                className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors"
+              >
+                <X size={16} strokeWidth={2.5} />
               </button>
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 luxury-scrollbar" style={{ background: "#0D0D0D" }}>
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 luxury-scrollbar bg-[#F8FAFC]">
               {loading ? (
                 <div className="flex justify-center items-center h-full">
-                  <div className="w-6 h-6 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37] animate-spin" />
+                  <div className="w-7 h-7 rounded-full border-2 border-blue-200 border-t-blue-600 animate-spin" />
                 </div>
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center opacity-50">
-                  <MessageSquare size={32} className="text-[#D4AF37] mb-3 opacity-50" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">How can we help you today?</p>
+                <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                  <div className="h-13 w-13 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center mb-3 shadow-inner">
+                    <MessageSquare size={26} />
+                  </div>
+                  <p className="text-xs font-black uppercase tracking-wider text-[#0F172A]">How can we help you?</p>
+                  <p className="text-[10px] font-medium text-slate-400 mt-1">Send a message below and our official support team will assist you immediately.</p>
                 </div>
               ) : (
-                messages.map((msg) => {
-                  const isUser = msg.sender_type === "user";
+                messages.map((msg: any) => {
+                  const isUser = (msg.sender || msg.sender_type) === "user";
                   return (
                     <div key={msg.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                      <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
                         isUser 
-                          ? "bg-[#D4AF37]/10 border border-[#D4AF37]/20 rounded-br-sm text-right" 
-                          : "bg-[#252525] border border-white/5 rounded-bl-sm"
+                          ? "bg-blue-600 text-white rounded-br-sm" 
+                          : "bg-white border border-slate-200 text-slate-800 rounded-bl-sm"
                       }`}>
                         {!isUser && (
-                          <div className="flex items-center gap-1.5 mb-1 opacity-60">
-                            <ShieldCheck size={10} className="text-[#D4AF37]" />
-                            <span className="text-[8px] font-black uppercase tracking-widest text-[#D4AF37]">Support Team</span>
+                          <div className="flex items-center gap-1.5 mb-1 text-blue-700">
+                            <ShieldCheck size={11} strokeWidth={2.5} />
+                            <span className="text-[8.5px] font-black uppercase tracking-wider">Official Support</span>
                           </div>
                         )}
-                        <p className={`text-[11px] font-medium leading-relaxed ${isUser ? "text-white" : "text-[rgba(245,245,245,0.9)]"}`}>
+                        <p className="text-xs font-medium leading-relaxed">
                           {msg.message}
                         </p>
-                        <p className="text-[8px] font-bold text-[rgba(245,245,245,0.3)] mt-2 uppercase tracking-widest">
+                        <p className={`text-[8px] font-extrabold mt-1.5 uppercase tracking-wider ${isUser ? "text-blue-200" : "text-slate-400"}`}>
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
@@ -204,22 +211,21 @@ export default function SupportWidget() {
             </div>
 
             {/* Input Area */}
-            <form onSubmit={handleSend} className="p-4 bg-[#1A1A1A] border-t border-[rgba(212,175,55,0.1)]">
+            <form onSubmit={handleSend} className="p-3.5 bg-white border-t border-blue-100">
               <div className="relative flex items-center">
                 <input
                   type="text"
                   placeholder="Type your message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="w-full bg-[#252525] text-white text-xs font-medium rounded-full py-3 pl-4 pr-12 focus:outline-none border border-white/5 focus:border-[#D4AF37]/30 transition-colors placeholder:text-white/20"
+                  className="w-full bg-slate-50 text-slate-900 text-xs font-bold rounded-2xl py-3.5 pl-4 pr-12 focus:outline-none border border-slate-200 focus:border-blue-500 transition-colors placeholder:text-slate-400"
                 />
                 <button
                   type="submit"
                   disabled={!newMessage.trim()}
-                  className="absolute right-1.5 h-8 w-8 rounded-full flex items-center justify-center transition-all disabled:opacity-50"
-                  style={{ background: newMessage.trim() ? "linear-gradient(135deg, #A08020, #D4AF37)" : "transparent", color: newMessage.trim() ? "#0D0D0D" : "rgba(245,245,245,0.3)" }}
+                  className="absolute right-1.5 h-9 w-9 rounded-xl flex items-center justify-center transition-all disabled:opacity-40 btn-blue text-white shadow-md"
                 >
-                  <Send size={14} className={newMessage.trim() ? "ml-0.5" : ""} />
+                  <Send size={15} strokeWidth={2.5} />
                 </button>
               </div>
             </form>

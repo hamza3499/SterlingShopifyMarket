@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
 import { connectDB } from './config/db';
+import { initDailyResetCron } from './utils/dailyReset';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import adminRoutes from './routes/adminRoutes';
@@ -19,6 +20,7 @@ dotenv.config();
 
 // Connect to database
 connectDB();
+initDailyResetCron();
 
 const app = express();
 const server = http.createServer(app);
@@ -95,19 +97,20 @@ io.on('connection', (socket) => {
 
 const PORT = parseInt(String(process.env.PORT || '5000'), 10);
 
-server.listen(PORT, () => {
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-});
+function startServer(port: number) {
+  server.listen(port, () => {
+    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
+  });
 
-server.on('error', (err: any) => {
-  if (err.code === 'EADDRINUSE') {
-    console.warn(`⚠️  Port ${PORT} is busy — retrying on port ${PORT + 1}...`);
-    server.close();
-    server.listen(PORT + 1, () => {
-      console.log(`🚀 Server running on fallback port ${PORT + 1}`);
-    });
-  } else {
-    console.error('Server error:', err);
-    process.exit(1);
-  }
-});
+  server.once('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`⚠️  Port ${port} is busy — trying port ${port + 1}...`);
+      server.close(() => startServer(port + 1));
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  });
+}
+
+startServer(PORT);
